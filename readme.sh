@@ -138,7 +138,14 @@ print(urllib.parse.quote_plus(sys.argv[1]))
 }
 
 escape_md() {
-    sed -E 's/\|/\\|/g'
+    sed -E \
+        -e 's/\\/\\\\/g' \
+        -e 's/\|/\\|/g' \
+        -e 's/_/\\_/g' \
+        -e 's/\*/\\*/g' \
+        -e 's/`/\\`/g' \
+        -e 's/\[/\\[/g' \
+        -e 's/\]/\\]/g'
 }
 
 make_table() {
