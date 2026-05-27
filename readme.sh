@@ -148,6 +148,32 @@ escape_md() {
         -e 's/\]/\\]/g'
 }
 
+extract_sort_time() {
+    local file="$1"
+    local date_line
+
+    date_line="$(
+        grep -m1 '^Date:' "$file" \
+            | sed -E 's/^Date:[[:space:]]*//' \
+            || true
+    )"
+
+    if [[ -z "$date_line" ]]; then
+        echo 0
+        return
+    fi
+
+    date -d "$date_line" '+%s' 2>/dev/null || echo 0
+}
+
+extract_version_num() {
+    local file="$1"
+    local version
+
+    version="$(extract_version "$file")"
+    echo "$version" | sed -E 's/^v//'
+}
+
 make_table() {
     local dir="$1"
 
@@ -163,16 +189,18 @@ make_table() {
     shopt -u nullglob
 
     for file in "${files[@]}"; do
-        local subject subsystem version patch_date discussion
+        local subject subsystem version version_num patch_date discussion sort_time
 
         subject="$(extract_subject "$file" | escape_md)"
         subsystem="$(extract_subsystem "$file" | escape_md)"
         version="$(extract_version "$file")"
+        version_num="$(extract_version_num "$file")"
         patch_date="$(extract_date "$file")"
         discussion="$(extract_discussion "$file")"
+        sort_time="$(extract_sort_time "$file")"
 
-        echo "| $subject | $subsystem | $version | $patch_date | $discussion |"
-    done
+        echo "$sort_time|$version_num| $subject | $subsystem | $version | $patch_date | $discussion |"
+    done | sort -t'|' -k1,1nr -k2,2nr | cut -d'|' -f3-
 }
 
 merged_count="$(count_patches "$MERGED_DIR")"
