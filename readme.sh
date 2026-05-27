@@ -113,7 +113,8 @@ extract_subsystem() {
 extract_discussion() {
     local file="$1"
     local subject
-    local encoded_subject
+    local query
+    local encoded_query
 
     subject="$(extract_subject "$file")"
 
@@ -122,16 +123,18 @@ extract_discussion() {
         return
     fi
 
-    encoded_subject="$(
+    query="s:\"$subject\""
+
+    encoded_query="$(
         python3 -c '
 import sys
 import urllib.parse
 
-print(urllib.parse.quote(sys.argv[1]))
-' "$subject"
+print(urllib.parse.quote_plus(sys.argv[1]))
+' "$query"
     )"
 
-    echo "[search](https://lore.kernel.org/all/?q=$encoded_subject)"
+    echo "[search](https://lore.kernel.org/all/?q=$encoded_query)"
 }
 
 escape_md() {
